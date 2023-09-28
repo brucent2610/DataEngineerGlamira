@@ -1,5 +1,6 @@
 import os
 import base64
+import re
 
 from cloudevents.http import CloudEvent
 import functions_framework
@@ -22,15 +23,14 @@ def submit_job(data):
     # Google Cloud Storage URL.
     job = {
         "placement": {"cluster_name": cluster_name},
-        "spark_job": {
-            "main_class": "org.apache.spark.examples.SparkPi",
-            "python_file_uris": [
-                python_file_uri
-            ],
+         "pyspark_job": {
+            "main_python_file_uri": python_file_uri,
+            "jar_file_uris" : [],
+            "python_file_uris": [],
             "args": [
                 data
-            ],
-        },
+            ]
+        }
     }
 
     operation = job_client.submit_job_as_operation(
@@ -58,8 +58,9 @@ def submit_job(data):
 @functions_framework.cloud_event
 def subscribe(cloud_event: CloudEvent) -> None:
     # Print out the data from Pub/Sub, to prove that it worked
+    data = base64.b64decode(cloud_event.data["message"]["data"]).decode()
     print(
-        "Data: " + base64.b64decode(cloud_event.data["message"]["data"]).decode() + "!"
+        "Data: " + data
     )
     submit_job(data)
 
