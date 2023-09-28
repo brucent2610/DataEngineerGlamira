@@ -1,0 +1,15 @@
+.idea
+!/data/tiki/json-split.py
+/data
+/keys
+
+#Data and Settings mongo
+/mongo/001_users.js
+/mongo
+
+.env
+
+__pycache__
+*/__pycache__/*
+
+.DS_Store

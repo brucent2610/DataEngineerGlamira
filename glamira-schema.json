@@ -1,0 +1,271 @@
+[
+    {
+        "fields": [
+            {
+                "mode": "NULLABLE",
+                "name": "time_stamp",
+                "type": "INTEGER"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "ip",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "user_agent",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "resolution",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "user_id_db",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "device_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "api_version",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "store_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "local_time",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "show_recommendation",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "current_url",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "referrer_url",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "email_address",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "recommendation",
+                "type": "BOOLEAN"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "utm_source",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "collection",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "product_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "viewing_product_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "cat_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "collect_id",
+                "type": "STRING"
+            },
+            {
+                "fields": [
+                    {
+                        "mode": "NULLABLE",
+                        "name": "option_label",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "option_id",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "value_label",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "value_id",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "quality",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "quality_label",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "alloy",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "diamond",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "shapediamond",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "stone",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "pearlcolor",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "finish",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "price",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "category id",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "Kollektion",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "kollektion_id",
+                        "type": "STRING"
+                    }
+                    
+                ],
+                "mode": "REPEATED",
+                "name": "option",
+                "type": "RECORD"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "order_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "recommendation_product_id",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "recommendation_clicked_position",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "utm_medium",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "key_search",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "price",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "currency",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "recommendation_product_position",
+                "type": "INTEGER"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "is_paypal",
+                "type": "STRING"
+            },
+            {
+                "fields": [
+                    {
+                        "mode": "NULLABLE",
+                        "name": "product_id",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "price",
+                        "type": "STRING"
+                    },
+                     {
+                        "mode": "NULLABLE",
+                        "name": "currency",
+                        "type": "STRING"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "amount",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "mode": "NULLABLE",
+                        "name": "option",
+                        "type": "JSON"
+                    }
+                ],
+                "mode": "REPEATED",
+                "name": "cart_products",
+                "type": "RECORD"
+            }
+        ]
+    }
+]

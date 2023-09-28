@@ -1,0 +1,29 @@
+version: '3'
+services:
+  glamira-gcloud:
+    build: .
+    image: alpine/gcloud
+    platform: linux/amd64
+    command: gcloud --help
+    environment:
+      GCLOUD_EMAIL_SERVICE_ACCOUNT: phongnt@data-engineer-393307.iam.gserviceaccount.com
+      GCLOUD_KEY_FILE: data-engineer-393307-efca99797b17.json
+      GCLOUD_PROJECT: data-engineer-393307
+    volumes:
+      - ./keys:/keys
+      - ./data/backup:/data/backup
+  glamira-mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+    volumes:
+      - ./mongo/001_users.js:/docker-entrypoint-initdb.d/001_users.js:ro
+      - ./mongo/db:/data/db
+      - ./mongo/configdb:/data/configdb
+      - ./data/backup:/data/backup
+    ports:
+      - "27017:27017"
+    restart: always
+    command: mongod --auth --wiredTigerCacheSizeGB 1.5
