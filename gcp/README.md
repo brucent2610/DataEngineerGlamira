@@ -10,6 +10,7 @@ FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME=glamira-streaming-publisher-function
 FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME=glamira-streaming-subscriber-function
 DATAPROC_CLUSTER_NAME=glamira-dataproc
 DATAPROC_BUCKET=glamira-dataproc-script
+DATAPROC_BUCKET_URI=gs://${DATAPROC_BUCKET}/pyspark/glamira.py
 
 2. Create Pub/Sub Streaming data
 ```
@@ -55,7 +56,8 @@ gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} \
 --source=. \
 --entry-point=subscribe \
 --max-instances=10 \
---trigger-topic=$PUBSUB_TOPICS
+--trigger-topic=$PUBSUB_TOPICS \
+--set-env-vars PROJECT_ID=$PROJECT_ID,REGION=$REGION,CLUSTER_NAME=$DATAPROC_CLUSTER_NAME,PYTHON_FILE_URI=$DATAPROC_BUCKET_URI
 
 gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} --region=$REGION
 ```

@@ -10,6 +10,7 @@ from google.cloud import storage
 project_id = os.getenv('PROJECT_ID')
 region = os.getenv('REGION')
 cluster_name = os.getenv('CLUSTER_NAME')
+python_file_uri = os..getenv('PYTHON_FILE_URI')
 
 def submit_job():
     # Create the job client.
@@ -23,7 +24,9 @@ def submit_job():
         "placement": {"cluster_name": cluster_name},
         "spark_job": {
             "main_class": "org.apache.spark.examples.SparkPi",
-            "python_file_uris": ["file:///usr/lib/spark/examples/jars/spark-examples.jar"],
+            "python_file_uris": [
+                python_file_uri
+            ],
             "args": ["1000"],
         },
     }
