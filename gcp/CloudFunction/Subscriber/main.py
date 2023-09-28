@@ -10,7 +10,7 @@ from google.cloud import storage
 project_id = os.getenv('PROJECT_ID')
 region = os.getenv('REGION')
 cluster_name = os.getenv('CLUSTER_NAME')
-python_file_uri = os..getenv('PYTHON_FILE_URI')
+python_file_uri = os.getenv('PYTHON_FILE_URI')
 
 def submit_job():
     # Create the job client.
