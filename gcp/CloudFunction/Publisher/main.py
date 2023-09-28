@@ -12,9 +12,10 @@ topic_path = publisher.topic_path(project_id, topic_id)
 
 def index(request):
     try:
-        testAttribute = request.get_json().get('test')
-        resPubSub = publisher.publish(topic_path, testAttribute)
+        message = request.get_json().get('message')
+        resPubSub = publisher.publish(topic_path, message.encode("utf-8"))
         print(resPubSub.result())
         return f"OK"
-    except:
+    except Exception as error:
+        print("An exception occurred:", error) 
         return f"Not OK"

@@ -31,6 +31,8 @@ gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME} \
 --max-instances=10 \
 --trigger-http \
 --set-env-vars PROJECT_ID=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
+
+gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_NAME} --region=$REGION
 ```
 
 5. Test Cloud Function Publisher
@@ -54,6 +56,8 @@ gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} \
 --max-instances=10 \
 --trigger-topic=$PUBSUB_TOPICS \
 --set-env-vars PROJECT_ID=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
+
+gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} --region=$REGION
 ```
 
 8. View Logs Publisher
