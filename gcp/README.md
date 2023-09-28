@@ -8,11 +8,12 @@ REGION=us-central1
 PUBSUB_TOPICS=glamira-streaming
 FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME=glamira-streaming-publisher-function
 FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME=glamira-streaming-subscriber-function
+DATAPROC_CLUSTER_NAME=glamira-dataproc
+DATAPROC_BUCKET=glamira-dataproc-script
 
 2. Create Pub/Sub Streaming data
 ```
 gcloud pubsub topics create $PUBSUB_TOPICS
-gcloud pubsub subscriptions create --topic $PUBSUB_TOPICS $PUBSUB_TOPICS-sub
 ```
 
 3. Add permission
@@ -37,7 +38,7 @@ gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_NAME} --region=$REGION
 
 5. Test Cloud Function Publisher
 ```
-curl -X POST https://$REGION-$PROJECT_ID.cloudfunctions.net/$FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME -H "Content-Type:application/json" -d '{"test":"Hello World"}'
+curl -X POST https://$REGION-$PROJECT_ID.cloudfunctions.net/$FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME -H "Content-Type:application/json" -d '{"message":"Hello World"}'
 ```
 
 6. View Logs Publisher
@@ -54,8 +55,7 @@ gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} \
 --source=. \
 --entry-point=subscribe \
 --max-instances=10 \
---trigger-topic=$PUBSUB_TOPICS \
---set-env-vars PROJECT_ID=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
+--trigger-topic=$PUBSUB_TOPICS
 
 gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} --region=$REGION
 ```
@@ -63,4 +63,23 @@ gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME} --region=$
 8. View Logs Publisher
 ```
 gcloud beta functions logs read $FUNCTION_GLAMIRA_STREAMING_SUBSCRIBER_NAME --gen2 --limit=100 --region=$REGION
+```
+
+9. Create Dataproc Cluster
+```
+gcloud dataproc clusters create $DATAPROC_CLUSTER_NAME \
+--region=$REGION \
+--master-machine-type=n2-standard-2 \
+--master-boot-disk-size=30GB \
+--master-boot-disk-type=pd-standard
+```
+
+10. Create Dataproc Bucket script
+```
+gsutil mb -c standard -l ${REGION} gs://${DATAPROC_BUCKET}
+```
+
+11. Sync Python script to Bucket
+```
+gsutil -m -o "GSUtil:parallel_thread_count=4" rsync -d -r . gs://${DATAPROC_BUCKET}/pyspark
 ```
