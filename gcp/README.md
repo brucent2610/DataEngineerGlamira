@@ -23,10 +23,16 @@ gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:$SERV
 ```
 gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_NAME} \
 --gen2 \
---runtime=python37 \
+--runtime=python311 \
 --region=${REGION} \
 --source=. \
 --entry-point=index \
 --max-instances=10 \
---set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID
+--trigger-http \
+--set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
+```
+
+5. Test Cloud Function
+```
+curl -X POST https://$REGION-$PROJECT_ID.cloudfunctions.net/$FUNCTION_GLAMIRA_STREAMING_NAME -H "Content-Type:application/json" -d '{"test":"Hello World"}'
 ```
