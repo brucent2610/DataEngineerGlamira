@@ -7,6 +7,9 @@
 /mongo/001_users.js
 /mongo
 
+#Data and Setting Mysql
+/mysql
+
 .env
 
 __pycache__

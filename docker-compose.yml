@@ -15,3 +15,15 @@ services:
       - "27017:27017"
     restart: always
     command: mongod --auth --wiredTigerCacheSizeGB 1.5
+  glamira-mysql:
+    image: mysql:${MYSQL_VERSION}
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes: 
+      - ./mysql:/var/lib/mysql
+      - ./data/mysql:/var/lib/mysql-files/
