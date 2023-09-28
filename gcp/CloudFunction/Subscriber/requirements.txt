@@ -1,2 +1,3 @@
 functions-framework==3.3.0
 google-cloud-dataproc
+google-cloud-storage
