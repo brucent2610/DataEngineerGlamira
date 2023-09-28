@@ -1,17 +1,5 @@
 version: '3'
 services:
-  glamira-gcloud:
-    build: .
-    image: alpine/gcloud
-    platform: linux/amd64
-    command: gcloud --help
-    environment:
-      GCLOUD_EMAIL_SERVICE_ACCOUNT: phongnt@data-engineer-393307.iam.gserviceaccount.com
-      GCLOUD_KEY_FILE: data-engineer-393307-efca99797b17.json
-      GCLOUD_PROJECT: data-engineer-393307
-    volumes:
-      - ./keys:/keys
-      - ./data/backup:/data/backup
   glamira-mongo:
     image: mongo:latest
     environment:
