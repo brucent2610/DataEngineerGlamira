@@ -29,7 +29,7 @@ gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_NAME} \
 --entry-point=index \
 --max-instances=10 \
 --trigger-http \
---set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
+--set-env-vars PROJECT_ID=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
 ```
 
 5. Test Cloud Function

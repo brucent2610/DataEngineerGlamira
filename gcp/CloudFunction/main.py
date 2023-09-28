@@ -2,8 +2,8 @@ import os
 from google.cloud import pubsub_v1
 
 # TODO(developer)
-# project_id = "your-project-id"
-# topic_id = "your-topic-id"
+project_id = os.getenv('PROJECT_ID')
+topic_id = os.getenv('PUBSUB_TOPICS')
 
 publisher = pubsub_v1.PublisherClient()
 # The `topic_path` method creates a fully qualified identifier
