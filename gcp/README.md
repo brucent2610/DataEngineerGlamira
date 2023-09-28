@@ -39,7 +39,7 @@ gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_NAME} --region=$REGION
 
 5. Test Cloud Function Publisher
 ```
-curl -X POST https://$REGION-$PROJECT_ID.cloudfunctions.net/$FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME -H "Content-Type:application/json"  -F '{"message":"Hello World"}'
+curl -X POST https://$REGION-$PROJECT_ID.cloudfunctions.net/$FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME -H "Content-Type:application/json" -d @example.json
 ```
 
 6. View Logs Publisher

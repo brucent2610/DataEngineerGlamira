@@ -42,3 +42,10 @@ jq 'del(._id)' -c summary-$BACKUP_TIME.json > summary-$BACKUP_TIME-converted.jso
 ```
 gsutil cp summary-$BACKUP_TIME-converted.json gs://${BUCKET}
 ```
+
+# Reference
+- https://cloud.google.com/compute/docs/general-purpose-machines
+- https://cloud.google.com/dataproc/docs/guides/create-cluster
+- https://cloud.google.com/dataproc/docs/guides/submit-job
+- https://cloud.google.com/functions/docs/tutorials/pubsub
+- https://cloud.google.com/pubsub/docs/publisher#publish-messages-to-a-topic
