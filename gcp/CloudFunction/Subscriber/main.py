@@ -12,7 +12,7 @@ region = os.getenv('REGION')
 cluster_name = os.getenv('CLUSTER_NAME')
 python_file_uri = os.getenv('PYTHON_FILE_URI')
 
-def submit_job():
+def submit_job(data):
     # Create the job client.
     job_client = dataproc.JobControllerClient(
         client_options={"api_endpoint": f"{region}-dataproc.googleapis.com:443"}
@@ -27,7 +27,9 @@ def submit_job():
             "python_file_uris": [
                 python_file_uri
             ],
-            "args": ["1000"],
+            "args": [
+                data
+            ],
         },
     }
 
@@ -57,7 +59,8 @@ def submit_job():
 def subscribe(cloud_event: CloudEvent) -> None:
     # Print out the data from Pub/Sub, to prove that it worked
     print(
-        "Hello, " + base64.b64decode(cloud_event.data["message"]["data"]).decode() + "!"
+        "Data: " + base64.b64decode(cloud_event.data["message"]["data"]).decode() + "!"
     )
+    submit_job(data)
 
 # [END functions_cloudevent_pubsub]
