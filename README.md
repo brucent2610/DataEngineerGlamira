@@ -49,3 +49,4 @@ gsutil cp summary-$BACKUP_TIME-converted.json gs://${BUCKET}
 - https://cloud.google.com/dataproc/docs/guides/submit-job
 - https://cloud.google.com/functions/docs/tutorials/pubsub
 - https://cloud.google.com/pubsub/docs/publisher#publish-messages-to-a-topic
+- https://bilgedemirkaya.medium.com/how-to-do-apache-beam-transform-with-mongodb-in-python-59e206a3802d
