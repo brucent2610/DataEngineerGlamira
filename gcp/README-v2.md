@@ -15,6 +15,10 @@ DATAFLOW_WINDOW_DURATION=60
 DATAFLOW_ALLOWED_LATENESS=1
 DATAFLOW_DEADLETTER_BUCKET=$PROJECT_ID-cloud-data-lake
 
+VM_NAME=glamira-mongodb
+
+FIREWALL_RULE_NAME=rule-allow-tcp-27017-dataflow
+
 2. Create Pub/Sub Streaming data
 ```
 gcloud pubsub topics create $PUBSUB_TOPICS
@@ -72,5 +76,31 @@ python3 glamira_streaming_pipeline.py \
 --window_duration=${DATAFLOW_WINDOW_DURATION} \
 --allowed_lateness=${DATAFLOW_ALLOWED_LATENESS} \
 --dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira/error \
---output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira/output
+--output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira/output \
+--output_mongo_uri=mongodb://glamira:glamira@10.128.0.15:27017/glamira
+```
+
+10. Create VM for MongoDB
+```
+gcloud compute instances create $VM_NAME \
+  --machine-type=e2-micro \
+  --zone ${ZONE} \
+  --image-project=ubuntu-os-cloud \
+  --image-family=ubuntu-2204-lts \
+  --boot-disk-size=20G
+  --scopes=storage-rw
+```
+
+11. Add firewall
+```
+gcloud compute firewall-rules create $FIREWALL_RULE_NAME \
+    --network "default" \
+    --action allow \
+    --direction "ingress" \
+    --target-tags dataflow \
+    --source-tags dataflow \
+    --priority 0 \
+    --rules tcp:27017
+gcloud compute instances add-tags $VM_NAME --tags dataflow
+gcloud compute firewall-rules list
 ```

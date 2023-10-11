@@ -6,6 +6,7 @@ import apache_beam as beam
 
 from datetime import datetime
 from apache_beam.io import fileio
+from apache_beam.io import mongodbio
 from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import StandardOptions
@@ -88,6 +89,12 @@ class GetTimestampFn(beam.DoFn):
         output = {'data': element, 'timestamp': window_start}
         yield json.dumps(output)
 
+class TransformBeforeToMongoDBFn(beam.DoFn):
+    def process(self, element, window=beam.DoFn.WindowParam):
+        row = element._asdict()
+        print(row)
+        yield row
+
 def run():
 
     parser = argparse.ArgumentParser(description='Load from Json from Pub/Sub into Google Cloud Storage and MongoDB')
@@ -104,6 +111,8 @@ def run():
     parser.add_argument('--output_bucket', required=True, help='GCS Output')
     parser.add_argument('--dead_letter_bucket', required=True, help='GCS Dead Letter Bucket')
 
+    parser.add_argument('--output_mongo_uri', required=True, help='URI MongoDB')
+
     opts = parser.parse_args()
 
     # Setting up the Beam pipeline options
@@ -118,6 +127,8 @@ def run():
     topic = opts.topic
     output_path = opts.output_bucket
     output_error_path = opts.dead_letter_bucket
+
+    output_mongo_uri = opts.output_mongo_uri
 
     window_duration = opts.window_duration
     allowed_lateness = opts.allowed_lateness
@@ -134,11 +145,19 @@ def run():
         | 'WriteUnparsedToGCS' >> fileio.WriteToFiles(output_error_path, shards=1, max_writers_per_bundle=0)
     )
 
-    (rows.parsed_row
+    window_transforms = (rows.parsed_row
         | "WindowByMinute" >> beam.WindowInto(beam.window.FixedWindows(int(window_duration)), trigger=AfterWatermark(late=AfterCount(1)), allowed_lateness=int(allowed_lateness), accumulation_mode=AccumulationMode.ACCUMULATING)
         # | "CountPerMinute" >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-        | "AddWindowTimestamp" >> beam.ParDo(GetTimestampFn())
+        # | "AddWindowTimestamp" >> beam.ParDo(GetTimestampFn())
+    )
+
+    (window_transforms 
+        | "TransformBeforeToGCS" >> beam.ParDo(GetTimestampFn())
         | 'WriteparsedToGCS' >> fileio.WriteToFiles(output_path, shards=1, max_writers_per_bundle=0)
+    )
+    (window_transforms 
+        | "TransformBeforeToMongoDB" >> beam.ParDo(TransformBeforeToMongoDBFn())
+        | 'WriteparsedToMongoDB' >> mongodbio.WriteToMongoDB(uri=output_mongo_uri, db='glamira', coll='events')
     )
 
     logging.getLogger().setLevel(logging.INFO)
