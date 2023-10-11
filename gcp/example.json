@@ -16,19 +16,5 @@
     "utm_source": false,
     "utm_medium": false,
     "collection": "view_product_detail",
-    "product_id": "110474",
-    "option": [
-        {
-            "option_label": "alloy",
-            "option_id": "332084",
-            "value_label": "",
-            "value_id": "3279318"
-        },
-        {
-            "option_label": "diamond",
-            "option_id": "",
-            "value_label": "",
-            "value_id": ""
-        }
-    ]
+    "product_id": "110474"
 }
