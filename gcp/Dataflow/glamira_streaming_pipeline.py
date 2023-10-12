@@ -80,7 +80,10 @@ class ConvertToEventLogFn(beam.DoFn):
         row = json.loads(element.decode('utf-8'))
         yield beam.pvalue.TaggedOutput('parsed_row', EventLog(**row))
     except:
-        yield beam.pvalue.TaggedOutput('unparsed_row', element.decode('utf-8'))
+        if(element is None):
+            yield beam.pvalue.TaggedOutput('unparsed_row', "")
+        else:
+            yield beam.pvalue.TaggedOutput('unparsed_row', element.decode('utf-8'))
 
 
 class GetTimestampFn(beam.DoFn):
