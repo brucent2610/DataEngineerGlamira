@@ -19,7 +19,7 @@ from apache_beam.transforms.trigger import AccumulationMode
 from apache_beam.transforms.combiners import CountCombineFn
 from apache_beam.runners import DataflowRunner, DirectRunner
 
-databaseIps = IP2Location.IP2Location(os.path.join("IP2Location/IP2Location-Python-master/data", "IP-COUNTRY.BIN"))
+from google.cloud import storage
 
 # {
 #     "time_stamp": 1591266092,
@@ -98,11 +98,26 @@ class GetTimestampFn(beam.DoFn):
         yield json.dumps(output)
 
 class TransformBeforeToMongoDBFn(beam.DoFn):
+
+    def start_bundle(self):
+        try:
+            # Download file db location in gcs
+            storage_client = storage.Client()
+            bucket = storage_client.get_bucket("data-engineer-393307-cloud-data-lake")
+            blob = bucket.blob("glamira/location/IP-COUNTRY.BIN")
+            blob.download_to_filename("IP-COUNTRY.BIN")
+
+            # Initialize a IP2Location
+            self.databaseIps = IP2Location.IP2Location("IP-COUNTRY.BIN")
+        except:
+            raise ValueError("Failed to start TransformBeforeToMongoDBFn Bundle.")
+
     def process(self, element, window=beam.DoFn.WindowParam):
         row = element._asdict()
         if(row['ip'] is not None):
-            rec = databaseIps.get_all(row['ip'])
+            rec = self.databaseIps.get_all(row['ip'])
             row['country'] = rec.country_long
+            # row['country'] = "Vietnam"
         yield row
 
 def run():
@@ -128,6 +143,7 @@ def run():
     pipeline_opts.append("--save_main_session")
     pipeline_opts.append("--streaming")
     pipeline_opts.append("--allow_unsafe_triggers")
+    pipeline_opts.append("--sdk_location=container")
 
     print(pipeline_opts)
 

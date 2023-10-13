@@ -1,7 +1,20 @@
 import os
 import IP2Location
 
-database = IP2Location.IP2Location(os.path.join("IP2Location/IP2Location-Python-master/data", "IPV6-COUNTRY.BIN"))
+from google.cloud import storage
+
+destination_file_name = "IP-COUNTRY.BIN"
+
+# Initialise a client
+storage_client = storage.Client()
+# Create a bucket object for our bucket
+bucket = storage_client.get_bucket("data-engineer-393307-cloud-data-lake")
+# Create a blob object from the filepath
+blob = bucket.blob("glamira/location/IP-COUNTRY.BIN")
+# Download the file to a destination
+blob.download_to_filename(destination_file_name)
+
+database = IP2Location.IP2Location("IP-COUNTRY.BIN")
 
 rec = database.get_all("19.5.10.1")
 
