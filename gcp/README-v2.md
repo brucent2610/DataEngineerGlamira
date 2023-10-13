@@ -14,6 +14,9 @@ DATAFLOW_GCS_OUTPUT=$PROJECT_ID-cloud-data-lake
 DATAFLOW_WINDOW_DURATION=60
 DATAFLOW_ALLOWED_LATENESS=1
 DATAFLOW_DEADLETTER_BUCKET=$PROJECT_ID-cloud-data-lake
+DATAFLOW_TEMPLATE_IMAGE="gcr.io/$PROJECT_ID/dataflow/glamira_pipeline:latest"
+DATAFLOW_TEMPLATE_PATH="gs://${DATAFLOW_BUCKET}/templates/glamira_pipeline.json"
+DATAFLOW_JOB_NAME="glamira-streaming-event-pipeline"
 
 VM_NAME=glamira-mongodb
 
@@ -103,4 +106,40 @@ gcloud compute firewall-rules create $FIREWALL_RULE_NAME \
     --rules tcp:27017
 gcloud compute instances add-tags $VM_NAME --tags dataflow
 gcloud compute firewall-rules list
+```
+
+12. Build Custom Fex Template
+```
+gcloud config set builds/use_kaniko True
+gcloud builds submit --tag $DATAFLOW_TEMPLATE_IMAGE .
+gcloud beta dataflow flex-template build $DATAFLOW_TEMPLATE_PATH \
+  --image "$DATAFLOW_TEMPLATE_IMAGE" \
+  --sdk-language "PYTHON" \
+  --metadata-file "metadata.json"
+```
+
+13. Run Dataflow Job by Template
+```
+gcloud beta dataflow flex-template run ${DATAFLOW_JOB_NAME}-$(date +%Y%m%H%M$S) \
+  --region=$REGION \
+  --template-file-gcs-location ${DATAFLOW_TEMPLATE_PATH} \
+  --parameters "project=${PROJECT_ID},region=${REGION},staging_location=gs://${DATAFLOW_BUCKET}/staging,temp_location=gs://${DATAFLOW_BUCKET}/temp,topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS},window_duration=${DATAFLOW_WINDOW_DURATION},allowed_lateness=${DATAFLOW_ALLOWED_LATENESS},dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira/error,output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira/output,output_mongo_uri=mongodb://glamira:glamira@10.128.0.15:27017/glamira"
+```
+
+14. Run Dataflow Job by Template
+```
+python3 glamira_streaming_pipeline.py \
+--project=${PROJECT_ID} \
+--region=${REGION} \
+--sdk_container_image=$DATAFLOW_TEMPLATE_IMAGE \
+--staging_location=gs://${DATAFLOW_BUCKET}/staging \
+--temp_location=gs://${DATAFLOW_BUCKET}/temp \
+--runner=${DATAFLOW_RUNNER} \
+--topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS} \
+--window_duration=${DATAFLOW_WINDOW_DURATION} \
+--allowed_lateness=${DATAFLOW_ALLOWED_LATENESS} \
+--dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira/error \
+--output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira/output \
+--output_mongo_uri=mongodb://glamira:glamira@10.128.0.15:27017/glamira
+--sdk_location=container
 ```

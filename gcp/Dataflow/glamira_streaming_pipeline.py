@@ -1,7 +1,11 @@
+import os
+
 import json
 import typing
 import logging
 import time
+import argparse
+import IP2Location
 import apache_beam as beam
 
 from datetime import datetime
@@ -14,7 +18,8 @@ from apache_beam.transforms.trigger import AfterWatermark, AfterCount, AfterProc
 from apache_beam.transforms.trigger import AccumulationMode
 from apache_beam.transforms.combiners import CountCombineFn
 from apache_beam.runners import DataflowRunner, DirectRunner
-import argparse
+
+databaseIps = IP2Location.IP2Location(os.path.join("IP2Location/IP2Location-Python-master/data", "IP-COUNTRY.BIN"))
 
 # {
 #     "time_stamp": 1591266092,
@@ -95,7 +100,9 @@ class GetTimestampFn(beam.DoFn):
 class TransformBeforeToMongoDBFn(beam.DoFn):
     def process(self, element, window=beam.DoFn.WindowParam):
         row = element._asdict()
-        print(row)
+        if(row['ip'] is not None):
+            rec = databaseIps.get_all(row['ip'])
+            row['country'] = rec.country_long
         yield row
 
 def run():
@@ -104,26 +111,30 @@ def run():
 
     parser.add_argument('--project', required=True, help='Project')
     parser.add_argument('--region', required=True, help='Region')
+    parser.add_argument('--topic', required=True, help='Topic Pub/Sub')
     parser.add_argument('--staging_location', required=True, help='Staging Location')
     parser.add_argument('--temp_location', required=True, help='Temp Location')
-    parser.add_argument('--runner', required=True, help='Runner')
-    parser.add_argument('--topic', required=True, help='Topic Pub/Sub')
 
     parser.add_argument('--window_duration', required=True, help='Window duration in seconds')
     parser.add_argument('--allowed_lateness', required=True, help='Allowed lateness')
     parser.add_argument('--output_bucket', required=True, help='GCS Output')
     parser.add_argument('--dead_letter_bucket', required=True, help='GCS Dead Letter Bucket')
-
+    parser.add_argument('--runner', required=True, help='Specify Apache Beam Runner')
     parser.add_argument('--output_mongo_uri', required=True, help='URI MongoDB')
 
-    opts = parser.parse_args()
+    opts, pipeline_opts = parser.parse_known_args()
+
+    pipeline_opts.append("--max_num_workers=2")
+    pipeline_opts.append("--save_main_session")
+    pipeline_opts.append("--streaming")
+    pipeline_opts.append("--allow_unsafe_triggers")
+
+    print(pipeline_opts)
 
     # Setting up the Beam pipeline options
-    options = PipelineOptions(save_main_session=True, streaming=True, max_num_workers=2, allow_unsafe_triggers=True)
+    options = PipelineOptions(pipeline_opts)
     options.view_as(GoogleCloudOptions).project = opts.project
     options.view_as(GoogleCloudOptions).region = opts.region
-    options.view_as(GoogleCloudOptions).staging_location = opts.staging_location
-    options.view_as(GoogleCloudOptions).temp_location = opts.temp_location
     options.view_as(GoogleCloudOptions).job_name = '{0}{1}'.format('glamira-streaming-event-pipeline-',time.time_ns())
     options.view_as(StandardOptions).runner = opts.runner
 
