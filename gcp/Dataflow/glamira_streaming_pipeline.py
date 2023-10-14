@@ -1,7 +1,6 @@
 import os
 
 import json
-import typing
 import logging
 import time
 import argparse
@@ -20,6 +19,7 @@ from apache_beam.transforms.combiners import CountCombineFn
 from apache_beam.runners import DataflowRunner, DirectRunner
 
 from google.cloud import storage
+from typing import NamedTuple, List
 
 # {
 #     "time_stamp": 1591266092,
@@ -56,7 +56,13 @@ from google.cloud import storage
 #     ]
 # }
 
-class EventLog(typing.NamedTuple):
+class Option(NamedTuple):
+    option_label: str
+    option_id: str
+    value_label: str
+    value_id: str
+
+class EventLog(NamedTuple):
     time_stamp: int
     ip: str
     user_agent: str
@@ -75,7 +81,7 @@ class EventLog(typing.NamedTuple):
     utm_medium: bool
     collection: str
     product_id: str
-
+    option: List[Option]
 
 beam.coders.registry.register_coder(EventLog, beam.coders.RowCoder)
 
@@ -93,9 +99,10 @@ class ConvertToEventLogFn(beam.DoFn):
 
 class GetTimestampFn(beam.DoFn):
     def process(self, element, window=beam.DoFn.WindowParam):
-        window_start = window.start.to_utc_datetime().strftime("%Y-%m-%dT%H:%M:%S")
-        output = {'data': element, 'timestamp': window_start}
-        yield json.dumps(output)
+        # window_start = window.start.to_utc_datetime().strftime("%Y-%m-%dT%H:%M:%S")
+        # output = {'data': element, 'timestamp': window_start}
+        row = element._asdict()
+        yield json.dumps(row)
 
 class TransformBeforeToMongoDBFn(beam.DoFn):
 
