@@ -86,15 +86,30 @@ class EventLog(NamedTuple):
 beam.coders.registry.register_coder(EventLog, beam.coders.RowCoder)
 
 class ConvertToEventLogFn(beam.DoFn):
-  def process(self, element):
-    try:
-        row = json.loads(element.decode('utf-8'))
-        yield beam.pvalue.TaggedOutput('parsed_row', EventLog(**row))
-    except:
-        if(element is None):
-            yield beam.pvalue.TaggedOutput('unparsed_row', "")
-        else:
-            yield beam.pvalue.TaggedOutput('unparsed_row', element.decode('utf-8'))
+
+    schema = {}
+
+    def start_bundle(self):
+        try:
+            # Download file db location in gcs
+            storage_client = storage.Client()
+            bucket = storage_client.get_bucket("glamira-gcs")
+            blob = bucket.blob("schema/default.json")
+            schema = blob.download_as_string(client=None)
+
+            self.schema = json.loads(schema)
+        except:
+            raise ValueError("Failed to start ConvertToEventLogFn Bundle.")
+
+    def process(self, element):
+        try:
+            row = json.loads(element.decode('utf-8'))
+            yield beam.pvalue.TaggedOutput('parsed_row', EventLog(**row))
+        except:
+            if(element is None):
+                yield beam.pvalue.TaggedOutput('unparsed_row', "")
+            else:
+                yield beam.pvalue.TaggedOutput('unparsed_row', element.decode('utf-8'))
 
 
 class GetTimestampFn(beam.DoFn):
@@ -110,8 +125,8 @@ class TransformBeforeToMongoDBFn(beam.DoFn):
         try:
             # Download file db location in gcs
             storage_client = storage.Client()
-            bucket = storage_client.get_bucket("data-engineer-393307-cloud-data-lake")
-            blob = bucket.blob("glamira/location/IP-COUNTRY.BIN")
+            bucket = storage_client.get_bucket("glamira-gcs")
+            blob = bucket.blob("location/IP-COUNTRY.BIN")
             blob.download_to_filename("IP-COUNTRY.BIN")
 
             # Initialize a IP2Location

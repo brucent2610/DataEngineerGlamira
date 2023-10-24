@@ -1,26 +1,28 @@
-# CloudFunction Pub/Sub Streaming Data MyProject
+# CloudFunction Pub/Sub Streaming Data UnigapProject
 
 1. Prepare the evironment variables
 ```
 PROJECT_ID=`gcloud config get-value project`
 SERVICE_ACCOUNT=$(gsutil kms serviceaccount)
 REGION=us-central1
+ZONE=us-central1-a
 PUBSUB_TOPICS=glamira-streaming
 FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME=glamira-streaming-publisher-function
 
 DATAFLOW_BUCKET=glamira-dataflow-bucket
 DATAFLOW_RUNNER=DataflowRunner
-DATAFLOW_GCS_OUTPUT=$PROJECT_ID-cloud-data-lake
+DATAFLOW_GCS_OUTPUT=glamira-gcs
 DATAFLOW_WINDOW_DURATION=60
 DATAFLOW_ALLOWED_LATENESS=1
-DATAFLOW_DEADLETTER_BUCKET=$PROJECT_ID-cloud-data-lake
+DATAFLOW_DEADLETTER_BUCKET=glamira-gcs-deadletter
 DATAFLOW_TEMPLATE_IMAGE="gcr.io/$PROJECT_ID/dataflow/glamira_pipeline:dev-v1"
-DATAFLOW_TEMPLATE_IMAGE_LATEST="gcr.io/$PROJECT_ID/dataflow/glamira_pipeline:latest"
 DATAFLOW_TEMPLATE_PATH="gs://${DATAFLOW_BUCKET}/templates/glamira_pipeline.json"
-DATAFLOW_TEMPLATE_PATH_LATEST="gs://${DATAFLOW_BUCKET}/templates/glamira_pipeline_latest.json"
 DATAFLOW_JOB_NAME="glamira-streaming-event-pipeline"
 
 VM_NAME=glamira-mongodb
+VM_IP=10.128.0.8
+VM_MONGO_USER=glamira
+VM_MONGO_PASSWORD=QNscg2hBKCuCHVsX6t9J
 
 FIREWALL_RULE_NAME=rule-allow-tcp-27017-dataflow
 
@@ -44,9 +46,14 @@ gcloud functions deploy ${FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME} \
 --entry-point=index \
 --max-instances=10 \
 --trigger-http \
+--allow-unauthenticated \
 --set-env-vars PROJECT_ID=$PROJECT_ID,PUBSUB_TOPICS=$PUBSUB_TOPICS
 
 gcloud functions delete ${FUNCTION_GLAMIRA_STREAMING_NAME} --region=$REGION
+
+gcloud functions add-iam-policy-binding ${FUNCTION_GLAMIRA_STREAMING_NAME} --member="allUsers" --role="roles/cloudfunctions.invoker" --region=$REGION
+
+gcloud functions add-invoker-policy-binding ${FUNCTION_GLAMIRA_STREAMING_NAME} --region=$REGION --member="allUsers"
 ```
 
 5. Test Cloud Function Publisher
@@ -67,6 +74,8 @@ python3 -m pip install apache-beam[gcp]
 8. Create bucket for store pipeline information
 ```
 gsutil mb -c standard -l ${REGION} gs://$DATAFLOW_BUCKET
+gsutil mb -c standard -l ${REGION} gs://$DATAFLOW_GCS_OUTPUT
+gsutil mb -c standard -l ${REGION} gs://$DATAFLOW_DEADLETTER_BUCKET
 ```
 
 9. Run pipeline
@@ -80,9 +89,9 @@ python3 glamira_streaming_pipeline.py \
 --topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS} \
 --window_duration=${DATAFLOW_WINDOW_DURATION} \
 --allowed_lateness=${DATAFLOW_ALLOWED_LATENESS} \
---dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira/error \
---output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira/output \
---output_mongo_uri=mongodb://glamira:glamira@10.128.0.15:27017/glamira
+--dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira_streaming_data \
+--output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira_streaming_data \
+--output_mongo_uri="mongodb://${VM_MONGO_USER}:${VM_MONGO_PASSWORD}@${VM_IP}:27017/glamira?authSource=admin"
 ```
 
 10. Create VM for MongoDB
@@ -119,12 +128,6 @@ gcloud dataflow flex-template build $DATAFLOW_TEMPLATE_PATH \
   --image "$DATAFLOW_TEMPLATE_IMAGE" \
   --sdk-language "PYTHON" \
   --metadata-file "metadata.json"
-
-gcloud builds submit --tag $DATAFLOW_TEMPLATE_IMAGE_LATEST .
-gcloud dataflow flex-template build $DATAFLOW_TEMPLATE_PATH_LATEST \
-  --image "$DATAFLOW_TEMPLATE_IMAGE_LATEST" \
-  --sdk-language "PYTHON" \
-  --metadata-file "metadata.json"
 ```
 
 13. Run Dataflow Job by Template
@@ -132,5 +135,5 @@ gcloud dataflow flex-template build $DATAFLOW_TEMPLATE_PATH_LATEST \
 gcloud dataflow flex-template run ${DATAFLOW_JOB_NAME}-$(date +%Y%m%H%M$S) \
   --region=$REGION \
   --template-file-gcs-location ${DATAFLOW_TEMPLATE_PATH} \
-  --parameters "project=${PROJECT_ID},region=${REGION},staging_location=gs://${DATAFLOW_BUCKET}/staging,temp_location=gs://${DATAFLOW_BUCKET}/temp,topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS},window_duration=${DATAFLOW_WINDOW_DURATION},allowed_lateness=${DATAFLOW_ALLOWED_LATENESS},dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira/error,output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira/output,output_mongo_uri=mongodb://glamira:glamira@10.128.0.15:27017/glamira"
+  --parameters "project=${PROJECT_ID},region=${REGION},staging_location=gs://${DATAFLOW_BUCKET}/staging,temp_location=gs://${DATAFLOW_BUCKET}/temp,topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS},window_duration=${DATAFLOW_WINDOW_DURATION},allowed_lateness=${DATAFLOW_ALLOWED_LATENESS},dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira_streaming_data,output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira_streaming_data,output_mongo_uri=mongodb://${VM_MONGO_USER}:${VM_MONGO_PASSWORD}@${VM_IP}:27017/glamira?authSource=admin"
 ```
