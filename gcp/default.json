@@ -1,3 +1,4 @@
 {
-    "show_recommendation": "false"
+    "show_recommendation": "false",
+    "recommendation": true
 }

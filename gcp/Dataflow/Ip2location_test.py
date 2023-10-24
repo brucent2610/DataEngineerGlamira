@@ -8,9 +8,9 @@ destination_file_name = "IP-COUNTRY.BIN"
 # Initialise a client
 storage_client = storage.Client()
 # Create a bucket object for our bucket
-bucket = storage_client.get_bucket("data-engineer-393307-cloud-data-lake")
+bucket = storage_client.get_bucket("glamira-gcs")
 # Create a blob object from the filepath
-blob = bucket.blob("glamira/location/IP-COUNTRY.BIN")
+blob = bucket.blob("location/IP-COUNTRY.BIN")
 # Download the file to a destination
 blob.download_to_filename(destination_file_name)
 

@@ -91,19 +91,23 @@ class ConvertToEventLogFn(beam.DoFn):
 
     def start_bundle(self):
         try:
-            # Download file db location in gcs
+            # Download file schema db location in gcs
             storage_client = storage.Client()
             bucket = storage_client.get_bucket("glamira-gcs")
             blob = bucket.blob("schema/default.json")
             schema = blob.download_as_string(client=None)
 
             self.schema = json.loads(schema)
+            print(self.schema)
         except:
             raise ValueError("Failed to start ConvertToEventLogFn Bundle.")
 
     def process(self, element):
         try:
             row = json.loads(element.decode('utf-8'))
+            for key in (self.schema).keys():
+                if key not in row: 
+                    row[key] = self.schema[key]
             yield beam.pvalue.TaggedOutput('parsed_row', EventLog(**row))
         except:
             if(element is None):
