@@ -19,8 +19,8 @@ DATAFLOW_TEMPLATE_IMAGE="gcr.io/$PROJECT_ID/dataflow/glamira_pipeline:dev-v1"
 DATAFLOW_TEMPLATE_PATH="gs://${DATAFLOW_BUCKET}/templates/glamira_pipeline.json"
 DATAFLOW_JOB_NAME="glamira-streaming-event-pipeline"
 
-VM_NAME=glamira-mongodb
-VM_IP=10.128.0.8
+VM_NAME=vm-mongo
+VM_IP=10.128.0.18
 VM_MONGO_USER=glamira
 VM_MONGO_PASSWORD=QNscg2hBKCuCHVsX6t9J
 

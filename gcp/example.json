@@ -8,13 +8,25 @@
     "api_version": "1.0",
     "store_id": "12",
     "local_time": "2020-06-04 12:21:27",
-    "show_recommendation": "false",
     "current_url": "https://www.glamira.fr/glamira-pendant-viktor.html?alloy=yellow-375",
     "referrer_url": "https://www.glamira.fr/men-s-necklaces/",
     "email_address": "pereira.vivien@yahoo.fr",
-    "recommendation": false,
     "utm_source": false,
     "utm_medium": false,
     "collection": "view_product_detail",
-    "product_id": "110474"
+    "product_id": "110474",
+    "option": [
+        {
+            "option_label": "alloy",
+            "option_id": "332084",
+            "value_label": "",
+            "value_id": "3279318"
+        },
+        {
+            "option_label": "diamond",
+            "option_id": "",
+            "value_label": "",
+            "value_id": ""
+        }
+    ]
 }

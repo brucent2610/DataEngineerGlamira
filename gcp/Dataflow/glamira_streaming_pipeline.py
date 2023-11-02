@@ -89,7 +89,7 @@ class ConvertToEventLogFn(beam.DoFn):
 
     schema = {}
 
-    def start_bundle(self):
+    def setup(self):
         try:
             # Download file schema db location in gcs
             storage_client = storage.Client()
@@ -98,7 +98,6 @@ class ConvertToEventLogFn(beam.DoFn):
             schema = blob.download_as_string(client=None)
 
             self.schema = json.loads(schema)
-            print(self.schema)
         except:
             raise ValueError("Failed to start ConvertToEventLogFn Bundle.")
 
@@ -108,7 +107,7 @@ class ConvertToEventLogFn(beam.DoFn):
             for key in (self.schema).keys():
                 if key not in row: 
                     row[key] = self.schema[key]
-            yield beam.pvalue.TaggedOutput('parsed_row', EventLog(**row))
+            yield beam.pvalue.TaggedOutput('parsed_row', row)
         except:
             if(element is None):
                 yield beam.pvalue.TaggedOutput('unparsed_row', "")
@@ -120,12 +119,13 @@ class GetTimestampFn(beam.DoFn):
     def process(self, element, window=beam.DoFn.WindowParam):
         # window_start = window.start.to_utc_datetime().strftime("%Y-%m-%dT%H:%M:%S")
         # output = {'data': element, 'timestamp': window_start}
-        row = element._asdict()
-        yield json.dumps(row)
+        # row = element._asdict()
+        # yield json.dumps(row)
+        yield json.dumps(element)
 
 class TransformBeforeToMongoDBFn(beam.DoFn):
 
-    def start_bundle(self):
+    def setup(self):
         try:
             # Download file db location in gcs
             storage_client = storage.Client()
@@ -139,7 +139,8 @@ class TransformBeforeToMongoDBFn(beam.DoFn):
             raise ValueError("Failed to start TransformBeforeToMongoDBFn Bundle.")
 
     def process(self, element, window=beam.DoFn.WindowParam):
-        row = element._asdict()
+        # row = element._asdict()
+        row = element
         if(row['ip'] is not None):
             rec = self.databaseIps.get_all(row['ip'])
             row['country'] = rec.country_long
