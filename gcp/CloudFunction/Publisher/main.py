@@ -1,4 +1,5 @@
 import os
+import json
 from google.cloud import pubsub_v1
 
 # TODO(developer)
@@ -12,8 +13,8 @@ topic_path = publisher.topic_path(project_id, topic_id)
 
 def index(request):
     try:
-        message = request.get_json().get('message')
-        resPubSub = publisher.publish(topic_path, message.encode("utf-8"))
+        message = request.get_json()
+        resPubSub = publisher.publish(topic_path, (json.dumps(message)).encode("utf-8"))
         print(resPubSub.result())
         return f"OK"
     except Exception as error:
