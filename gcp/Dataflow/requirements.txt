@@ -1,3 +1,4 @@
 apache-beam[gcp]
 IP2Location
 google-cloud-storage
+pymongo

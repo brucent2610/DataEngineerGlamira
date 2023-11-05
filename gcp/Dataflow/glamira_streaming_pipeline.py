@@ -20,6 +20,7 @@ from apache_beam.runners import DataflowRunner, DirectRunner
 
 from google.cloud import storage
 from typing import NamedTuple, List
+from pymongo import MongoClient
 
 # {
 #     "time_stamp": 1591266092,
@@ -123,9 +124,42 @@ class GetTimestampFn(beam.DoFn):
         # yield json.dumps(row)
         yield json.dumps(element)
 
-class TransformBeforeToMongoDBFn(beam.DoFn):
+class UpdateMongoDB(beam.DoFn):
+
+    def __init__(self, output_mongo_uri):
+        self.output_mongo_uri = output_mongo_uri
+
+    def connectMongoDB(self):
+        try:
+            self.mongodbClient = MongoClient(self.output_mongo_uri)
+        except:
+            raise ValueError("Failed to Connect Mongo UpdateMongoDB Bundle.")
 
     def setup(self):
+        self.connectMongoDB()
+
+    def process(self, element, window=beam.DoFn.WindowParam):
+        database = self.mongodbClient['glamira']
+        collection = database['events']
+        print(element["activities"])
+        collection.update_one({
+            'device_id': element["device_id"]
+        }, {
+            '$set': {
+                "activities": element["activities"]
+            }
+        })
+
+    def teardown(self):
+        if(self.mongodbClient is not None): 
+            self.mongodbClient.close()
+
+class TransformBeforeToMongoDBFn(beam.DoFn):
+
+    def __init__(self, output_mongo_uri):
+        self.output_mongo_uri = output_mongo_uri
+
+    def getDatabaseLocationFile(self):
         try:
             # Download file db location in gcs
             storage_client = storage.Client()
@@ -138,14 +172,49 @@ class TransformBeforeToMongoDBFn(beam.DoFn):
         except:
             raise ValueError("Failed to start TransformBeforeToMongoDBFn Bundle.")
 
+    def connectMongoDB(self):
+        try:
+            self.mongodbClient = MongoClient(self.output_mongo_uri)
+        except:
+            raise ValueError("Failed to Connect Mongo TransformBeforeToMongoDBFn Bundle.")
+
+    def setup(self):
+        self.getDatabaseLocationFile()
+        self.connectMongoDB()
+
     def process(self, element, window=beam.DoFn.WindowParam):
         # row = element._asdict()
         row = element
+        if(row['device_id'] is None): 
+            yield beam.pvalue.TaggedOutput('no_device_id_event', row)
         if(row['ip'] is not None):
             rec = self.databaseIps.get_all(row['ip'])
             row['country'] = rec.country_long
             # row['country'] = "Vietnam"
-        yield row
+        database = self.mongodbClient['glamira']
+        collection = database['events']
+        device = collection.find_one({
+            'device_id': row["device_id"]
+        })
+        if(device):
+            row.pop("device_id")
+            activities = device["activities"]
+            activities.append(row)
+            activities.sort(key=lambda x:x['time_stamp'], reverse=True)
+            device["activities"] = activities[:5]
+            yield beam.pvalue.TaggedOutput('update_device_id_event', device)
+        else:
+            event = {
+                "device_id": row["device_id"]
+            }
+            row.pop("device_id")
+            activities = [row]
+            event["activities"] = activities
+            yield beam.pvalue.TaggedOutput('create_device_id_event', event)
+
+    def teardown(self):
+        if(self.mongodbClient is not None): 
+            self.mongodbClient.close()
 
 def run():
 
@@ -172,8 +241,6 @@ def run():
     pipeline_opts.append("--allow_unsafe_triggers")
     pipeline_opts.append("--sdk_location=container")
 
-    print(pipeline_opts)
-
     # Setting up the Beam pipeline options
     options = PipelineOptions(pipeline_opts)
     options.view_as(GoogleCloudOptions).project = opts.project
@@ -194,7 +261,7 @@ def run():
 
     rows = (p 
         | 'ReadFromPubSub' >> beam.io.ReadFromPubSub(topic)
-        | 'ParseJson' >> beam.ParDo(ConvertToEventLogFn()).with_outputs('parsed_row', 'unparsed_row').with_output_types(EventLog)
+        | 'ParseJson' >> beam.ParDo(ConvertToEventLogFn()).with_outputs('parsed_row', 'unparsed_row')
     )
 
     (rows.unparsed_row
@@ -212,8 +279,20 @@ def run():
         | "TransformBeforeToGCS" >> beam.ParDo(GetTimestampFn())
         | 'WriteparsedToGCS' >> fileio.WriteToFiles(output_path, shards=1, max_writers_per_bundle=0)
     )
-    (window_transforms 
-        | "TransformBeforeToMongoDB" >> beam.ParDo(TransformBeforeToMongoDBFn())
+
+    mongo_transformed = (window_transforms 
+        | "TransformBeforeToMongoDB" >> beam.ParDo(TransformBeforeToMongoDBFn(output_mongo_uri)).with_outputs('no_device_id_event', 'update_device_id_event', 'create_device_id_event')
+    )
+
+    (mongo_transformed.no_device_id_event
+        | 'WriteNoDeviceIdToGCS' >> fileio.WriteToFiles(output_error_path, shards=1, max_writers_per_bundle=0)
+    )
+
+    (mongo_transformed.update_device_id_event
+        | "UpsertparsedToMongoDB" >> beam.ParDo(UpdateMongoDB(output_mongo_uri))
+    )
+
+    (mongo_transformed.create_device_id_event
         | 'WriteparsedToMongoDB' >> mongodbio.WriteToMongoDB(uri=output_mongo_uri, db='glamira', coll='events')
     )
 

@@ -1,6 +1,8 @@
 import os
 import IP2Location
 
+import os.path
+
 from google.cloud import storage
 
 destination_file_name = "IP-COUNTRY.BIN"
@@ -15,6 +17,9 @@ blob = bucket.blob("location/IP-COUNTRY.BIN")
 blob.download_to_filename(destination_file_name)
 
 database = IP2Location.IP2Location("IP-COUNTRY.BIN")
+
+if(os.path.isfile("IP-COUNTRY.BIN")):
+    print("There is file IP-COUNTRY.BIN")
 
 rec = database.get_all("19.5.10.1")
 
