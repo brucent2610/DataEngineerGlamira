@@ -12,7 +12,7 @@ FUNCTION_GLAMIRA_STREAMING_PUBLISHER_NAME=glamira-streaming-publisher-function
 DATAFLOW_BUCKET=glamira-dataflow-bucket
 DATAFLOW_RUNNER=DataflowRunner
 DATAFLOW_GCS_OUTPUT=glamira-gcs
-DATAFLOW_WINDOW_DURATION=1800
+DATAFLOW_WINDOW_DURATION=3600
 DATAFLOW_ALLOWED_LATENESS=1
 DATAFLOW_DEADLETTER_BUCKET=glamira-gcs-deadletter
 DATAFLOW_TEMPLATE_IMAGE="gcr.io/$PROJECT_ID/dataflow/glamira_pipeline:dev-v1"
@@ -24,13 +24,13 @@ VM_IP=10.128.0.18
 VM_MONGO_USER=glamira
 VM_MONGO_PASSWORD=QNscg2hBKCuCHVsX6t9J
 VM_MONGO_URI=mongodb://${VM_MONGO_USER}:${VM_MONGO_PASSWORD}@${VM_IP}:27017/glamira?authSource=admin
-VM_MONGO_URI=mongodb+srv://${VM_MONGO_USER}:${VM_MONGO_PASSWORD}@${VM_IP}/glamira
 
 FIREWALL_RULE_NAME=rule-allow-tcp-27017-dataflow
 
 #Dev configuration
 VM_IP=glamira.jp9f18n.mongodb.net
 DATAFLOW_RUNNER=DirectRunner
+VM_MONGO_URI=mongodb+srv://${VM_MONGO_USER}:${VM_MONGO_PASSWORD}@${VM_IP}/glamira
 
 2. Create Pub/Sub Streaming data
 ```
@@ -142,5 +142,5 @@ gcloud dataflow flex-template build $DATAFLOW_TEMPLATE_PATH \
 gcloud dataflow flex-template run ${DATAFLOW_JOB_NAME}-$(date +%Y%m%H%M$S) \
   --region=$REGION \
   --template-file-gcs-location ${DATAFLOW_TEMPLATE_PATH} \
-  --parameters "project=${PROJECT_ID},region=${REGION},staging_location=gs://${DATAFLOW_BUCKET}/staging,temp_location=gs://${DATAFLOW_BUCKET}/temp,topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS},window_duration=${DATAFLOW_WINDOW_DURATION},allowed_lateness=${DATAFLOW_ALLOWED_LATENESS},dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira_streaming_data,output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira_streaming_data,output_mongo_uri=${VM_MONGO_URI}
+  --parameters "project=${PROJECT_ID},region=${REGION},staging_location=gs://${DATAFLOW_BUCKET}/staging,temp_location=gs://${DATAFLOW_BUCKET}/temp,topic=projects/${PROJECT_ID}/topics/${PUBSUB_TOPICS},window_duration=${DATAFLOW_WINDOW_DURATION},allowed_lateness=${DATAFLOW_ALLOWED_LATENESS},dead_letter_bucket=gs://${DATAFLOW_DEADLETTER_BUCKET}/glamira_streaming_data,output_bucket=gs://${DATAFLOW_GCS_OUTPUT}/glamira_streaming_data,output_mongo_uri=${VM_MONGO_URI}"
 ```

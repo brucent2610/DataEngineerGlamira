@@ -136,7 +136,10 @@ class UpdateMongoDB(beam.DoFn):
             raise ValueError("Failed to Connect Mongo UpdateMongoDB Bundle.")
 
     def setup(self):
-        self.connectMongoDB()
+        try:
+            self.connectMongoDB()
+        except ValueError:
+            print("Setup UpdateMongoDB failed"):
 
     def process(self, element, window=beam.DoFn.WindowParam):
         database = self.mongodbClient['glamira']
@@ -157,6 +160,7 @@ class UpdateMongoDB(beam.DoFn):
 class TransformBeforeToMongoDBFn(beam.DoFn):
 
     def __init__(self, output_mongo_uri):
+        self.databaseIps = None
         self.output_mongo_uri = output_mongo_uri
 
     def getDatabaseLocationFile(self):
@@ -167,10 +171,14 @@ class TransformBeforeToMongoDBFn(beam.DoFn):
             blob = bucket.blob("location/IP-COUNTRY.BIN")
             blob.download_to_filename("IP-COUNTRY.BIN")
 
-            # Initialize a IP2Location
-            self.databaseIps = IP2Location.IP2Location("IP-COUNTRY.BIN")
+            if(os.path.isfile("IP-COUNTRY.BIN")):
+                # Initialize a IP2Location
+                self.databaseIps = IP2Location.IP2Location("IP-COUNTRY.BIN")
+            else:
+                raise ValueError("File IP-COUNTRY.BIN download not exists TransformBeforeToMongoDBFn Bundle.")    
+            
         except:
-            raise ValueError("Failed to start TransformBeforeToMongoDBFn Bundle.")
+            raise ValueError("File IP-COUNTRY.BIN failed to download IP-COUNTRY.BIN TransformBeforeToMongoDBFn Bundle.")
 
     def connectMongoDB(self):
         try:
@@ -179,8 +187,12 @@ class TransformBeforeToMongoDBFn(beam.DoFn):
             raise ValueError("Failed to Connect Mongo TransformBeforeToMongoDBFn Bundle.")
 
     def setup(self):
-        self.getDatabaseLocationFile()
-        self.connectMongoDB()
+        try:
+            self.getDatabaseLocationFile()
+            self.connectMongoDB()
+        except ValueError:
+            print("Setup TransformBeforeToMongoDBFn failed"):
+
 
     def process(self, element, window=beam.DoFn.WindowParam):
         # row = element._asdict()
